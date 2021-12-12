@@ -6,21 +6,22 @@
 // Sets default values
 ABasePlayerCharacter::ABasePlayerCharacter()
 {
-	PrimaryActorTick.bCanEverTick = true;
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	FPSCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("ThirdPersonCamera"));
-    check(FPSCameraComponent != nullptr);
-    
-    // 将摄像机组件附加到我们的胶囊体组件。
-    FPSCameraComponent->SetupAttachment(CastChecked<USceneComponent, UCapsuleComponent>(GetCapsuleComponent()));
-	FPSCameraComponent->SetRelativeLocation(FVector(-100.0f, 0.0f, 100.0f + BaseEyeHeight));
+	check(FPSCameraComponent != nullptr);
+
+	// 将摄像机组件附加到我们的胶囊体组件。
+	FPSCameraComponent->SetupAttachment(CastChecked<USceneComponent, UCapsuleComponent>(GetCapsuleComponent()));
+	FPSCameraComponent->SetRelativeLocation(FVector(-300.0f, 0.0f, 100.0f + BaseEyeHeight));
 	FPSCameraComponent->bUsePawnControlRotation = true;
+	PrimaryActorTick.bCanEverTick = true;
 }
 
 // Called when the game starts or when spawned
 void ABasePlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	Animation = Cast<UPlayerAnimInstance>(GetMesh()->GetAnimInstance());
 }
 
 // Called every frame
@@ -44,20 +45,31 @@ void ABasePlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 	// 设置"操作"绑定。
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ABasePlayerCharacter::StartJump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ABasePlayerCharacter::StopJump);
+
+	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &ABasePlayerCharacter::StartAttack);
+	PlayerInputComponent->BindAction("Attack", IE_Released, this, &ABasePlayerCharacter::EndAttack);
+	PlayerInputComponent->BindAction("Block", IE_Pressed, this, &ABasePlayerCharacter::StartBlock);
+	PlayerInputComponent->BindAction("Block", IE_Released, this, &ABasePlayerCharacter::EndBlock);
 }
 
 void ABasePlayerCharacter::MoveForward(float Value)
 {
-	// 找出"前进"方向，并记录玩家想向该方向移动。
-	FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::X);
-	AddMovementInput(Direction, Value);
+	if (Animation)
+	{
+		Value = Animation->IsBlocking ? 0.3 * Value : Value;
+		FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::X);
+		AddMovementInput(Direction, Value);
+	}
 }
 
 void ABasePlayerCharacter::MoveRight(float Value)
 {
-	// 找出"右侧"方向，并记录玩家想向该方向移动。
-	FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::Y);
-	AddMovementInput(Direction, Value);
+	if (Animation)
+	{
+		Value = Animation->IsBlocking ? 0.3 * Value : Value;
+		FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::Y);
+		AddMovementInput(Direction, Value);
+	}
 }
 
 void ABasePlayerCharacter::StartJump()
@@ -69,3 +81,47 @@ void ABasePlayerCharacter::StopJump()
 {
 	bPressedJump = false;
 }
+
+void ABasePlayerCharacter::StartAttack()
+{
+	if (Animation)
+	{
+		Animation->IsAttacking = true;
+		Animation->PlayAttackAnimation();
+	}
+}
+
+void ABasePlayerCharacter::EndAttack()
+{
+	if (Animation)
+	{
+		Animation->IsAttacking = false;
+	}
+}
+
+void ABasePlayerCharacter::StartBlock()
+{
+	if (Animation)
+	{
+		Animation->IsBlocking = true;
+	}
+}
+
+void ABasePlayerCharacter::EndBlock()
+{
+	if (Animation)
+	{
+		Animation->IsBlocking = false;
+	}
+}
+
+float ABasePlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Damaged"));
+	if(Animation)
+	{
+		Animation->PlayDamagedAnimation();
+	}
+	return DamageAmount;
+}
+

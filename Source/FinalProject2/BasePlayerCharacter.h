@@ -5,7 +5,9 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Camera/CameraComponent.h"
+#include "UPlayerAnimInstance.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "BasePlayerCharacter.generated.h"
 
 
@@ -29,6 +31,9 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
+
 
 	// 处理用于前后移动的输入。
 	UFUNCTION()
@@ -46,7 +51,25 @@ public:
 	UFUNCTION()
 	void StopJump();
 
+	UFUNCTION()
+	void StartAttack();
+
+	UFUNCTION()
+	void EndAttack();
+
+	UFUNCTION()
+	void StartBlock();
+
+	UFUNCTION()
+	void EndBlock();
+
 	// FPS摄像机
 	UPROPERTY(VisibleAnywhere)
 	UCameraComponent* FPSCameraComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	UPlayerAnimInstance* Animation;
+
+	UPROPERTY(VisibleAnywhere)
+	ABasePlayerCharacter* Character;
 };
