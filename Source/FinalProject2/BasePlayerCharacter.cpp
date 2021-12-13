@@ -2,18 +2,21 @@
 
 
 #include "BasePlayerCharacter.h"
-
+#include "GameFramework/SpringArmComponent.h"
+#include "Camera/CameraComponent.h"
 // Sets default values
 ABasePlayerCharacter::ABasePlayerCharacter()
 {
-	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	FPSCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("ThirdPersonCamera"));
-	check(FPSCameraComponent != nullptr);
+	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
+	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
+	SpringArmComp->SetupAttachment(CastChecked<USceneComponent, UCapsuleComponent>(GetCapsuleComponent()));
+	CameraComp->SetupAttachment(SpringArmComp, USpringArmComponent::SocketName);
 
-	// 将摄像机组件附加到我们的胶囊体组件。
-	FPSCameraComponent->SetupAttachment(CastChecked<USceneComponent, UCapsuleComponent>(GetCapsuleComponent()));
-	FPSCameraComponent->SetRelativeLocation(FVector(-300.0f, 0.0f, 100.0f + BaseEyeHeight));
-	FPSCameraComponent->bUsePawnControlRotation = true;
+	SpringArmComp->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, 50.0f), FRotator(60.0f, 0.0f, 0.0f));
+	SpringArmComp->TargetArmLength = 200.f;
+	SpringArmComp->bEnableCameraLag = true;
+	SpringArmComp->CameraLagSpeed = 4.0f;
+	SpringArmComp->CameraLagMaxDistance = 50.f;
 	PrimaryActorTick.bCanEverTick = true;
 }
 
@@ -39,8 +42,8 @@ void ABasePlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 	PlayerInputComponent->BindAxis("MoveRight", this, &ABasePlayerCharacter::MoveRight);
 
 	// 设置"观看"绑定。
-	PlayerInputComponent->BindAxis("Turn", this, &ABasePlayerCharacter::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("LookUp", this, &ABasePlayerCharacter::AddControllerPitchInput);
+	InputComponent->BindAxis("CameraPitch", this, &ABasePlayerCharacter::PitchCamera);
+	InputComponent->BindAxis("CameraYaw", this, &ABasePlayerCharacter::YawCamera);
 
 	// 设置"操作"绑定。
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ABasePlayerCharacter::StartJump);
@@ -52,11 +55,20 @@ void ABasePlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 	PlayerInputComponent->BindAction("Block", IE_Released, this, &ABasePlayerCharacter::EndBlock);
 }
 
+
 void ABasePlayerCharacter::MoveForward(float Value)
 {
-	if (Animation)
+	if (Value != 0.0)
 	{
+		const float MeshInitDegree = -90.0;
 		Value = Animation->IsBlocking ? 0.3 * Value : Value;
+		FRotator ControllerRotation = Controller->GetControlRotation();
+		FRotator MeshRotation = GetMesh()->GetComponentRotation();
+		ControllerRotation.Yaw = SpringArmComp->GetComponentRotation().Yaw;
+		MeshRotation.Yaw = ControllerRotation.Yaw + MeshInitDegree;
+		MeshRotation.Yaw -= Value < 0.0 ? -180.0 : 0.0;
+		Controller->SetControlRotation(ControllerRotation);
+		GetMesh()->SetWorldRotation(MeshRotation);
 		FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::X);
 		AddMovementInput(Direction, Value);
 	}
@@ -64,10 +76,14 @@ void ABasePlayerCharacter::MoveForward(float Value)
 
 void ABasePlayerCharacter::MoveRight(float Value)
 {
-	if (Animation)
+	if (Value != 0.0)
 	{
 		Value = Animation->IsBlocking ? 0.3 * Value : Value;
 		FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::Y);
+		FRotator MeshRotation = GetMesh()->GetComponentRotation();
+		MeshRotation.Yaw = SpringArmComp->GetComponentRotation().Yaw;
+		MeshRotation.Yaw -= Value < 0.0 ? -180.0 : 0.0;
+		GetMesh()->SetWorldRotation(MeshRotation);
 		AddMovementInput(Direction, Value);
 	}
 }
@@ -115,13 +131,28 @@ void ABasePlayerCharacter::EndBlock()
 	}
 }
 
-float ABasePlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+void ABasePlayerCharacter::YawCamera(float Val)
+{
+	FRotator NewRotation = SpringArmComp->GetComponentRotation();
+	NewRotation.Yaw += Val;
+	SpringArmComp->SetWorldRotation(NewRotation);
+}
+
+void ABasePlayerCharacter::PitchCamera(float Val)
+{
+	FRotator NewRotation = SpringArmComp->GetComponentRotation();
+	NewRotation.Pitch = FMath::Clamp(NewRotation.Pitch + Val, -60.0f, -15.0f);
+	SpringArmComp->SetWorldRotation(NewRotation);
+}
+
+
+float ABasePlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
+                                       AController* EventInstigator, AActor* DamageCauser)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Damaged"));
-	if(Animation)
+	if (Animation)
 	{
 		Animation->PlayDamagedAnimation();
 	}
 	return DamageAmount;
 }
-

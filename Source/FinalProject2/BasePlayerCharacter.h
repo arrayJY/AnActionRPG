@@ -31,8 +31,8 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
-
+	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
+	                         AActor* DamageCauser) override;
 
 
 	// 处理用于前后移动的输入。
@@ -63,9 +63,16 @@ public:
 	UFUNCTION()
 	void EndBlock();
 
-	// FPS摄像机
-	UPROPERTY(VisibleAnywhere)
-	UCameraComponent* FPSCameraComponent;
+	UFUNCTION()
+	void YawCamera(float Val);
+	
+	UFUNCTION()
+	void PitchCamera(float Val);
+
+	UPROPERTY(EditAnywhere)
+	class UCameraComponent* CameraComp;
+	UPROPERTY(EditAnywhere)
+	class USpringArmComponent* SpringArmComp;
 
 	UPROPERTY(VisibleAnywhere)
 	UPlayerAnimInstance* Animation;
