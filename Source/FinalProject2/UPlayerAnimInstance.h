@@ -25,7 +25,13 @@ public:
 	void PlayDamagedAnimation();
 	
 	UFUNCTION()
+	void PlayDieAnimation();
+	
+	UFUNCTION()
 	void OnAttackEnd(UAnimMontage* animMontage, bool bInterrupted);
+	
+	UFUNCTION()
+	void OnDamagedEnd(UAnimMontage* animMontage, bool bInterrupted);
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category=PlayerState)
 	bool IsRunning;
@@ -50,4 +56,7 @@ public:
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category=PlayerAnimation)
 	UAnimMontage* DamagedMontage;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category=PlayerAnimation)
+	UAnimMontage* DieMontage;
 };

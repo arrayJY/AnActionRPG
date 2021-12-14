@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Camera/CameraComponent.h"
 #include "UPlayerAnimInstance.h"
+#include "WithWeaponSceneComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "BasePlayerCharacter.generated.h"
@@ -68,7 +69,22 @@ public:
 	
 	UFUNCTION()
 	void PitchCamera(float Val);
+	
+	UFUNCTION()
+	void SetMeshRotation(float Val);
+	UFUNCTION()
+	void ControllerRotateToCameraDirection();
 
+	UPROPERTY(EditAnywhere)
+	float Health;
+	UFUNCTION()
+	void DecreaseHealth(float Val);
+	UFUNCTION(BlueprintImplementableEvent, Category="Player")
+	void SetHealthBar(float Val);
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Player")
+	bool IsDamaged;
+	
 	UPROPERTY(EditAnywhere)
 	class UCameraComponent* CameraComp;
 	UPROPERTY(EditAnywhere)
