@@ -35,24 +35,16 @@ public:
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
 	                         AActor* DamageCauser) override;
 
-
-	// 处理用于前后移动的输入。
 	UFUNCTION()
 	void MoveForward(float Value);
 
-	// 处理用于左右移动的输入。
 	UFUNCTION()
 	void MoveRight(float Value);
 
-	// 按下键时，设置跳跃标记。
 	UFUNCTION()
-	void StartJump();
+	void Roll();
 
-	// 释放键时，清除跳跃标记。
-	UFUNCTION()
-	void StopJump();
-
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void StartAttack();
 
 	UFUNCTION()
@@ -90,9 +82,12 @@ public:
 	UPROPERTY(EditAnywhere)
 	class USpringArmComponent* SpringArmComp;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UPlayerAnimInstance* Animation;
 
 	UPROPERTY(VisibleAnywhere)
 	ABasePlayerCharacter* Character;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float Speed;
 };

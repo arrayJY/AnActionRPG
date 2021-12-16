@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "EnemySpawner.h"
 #include "GameFramework/GameModeBase.h"
 #include "FinalProject2GameMode.generated.h"
 
@@ -13,6 +14,14 @@ class AFinalProject2GameMode : public AGameModeBase
 
 public:
 	AFinalProject2GameMode();
+	virtual void BeginPlay() override;
+
+	UPROPERTY(EditAnywhere)
+	UClass* EnemyBPClass;
+	
+	UPROPERTY(EditAnywhere)
+	AEnemySpawner* Spawner;
+	
 };
 
 

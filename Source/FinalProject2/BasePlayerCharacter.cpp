@@ -4,11 +4,14 @@
 #include "BasePlayerCharacter.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 // Sets default values
 ABasePlayerCharacter::ABasePlayerCharacter()
 {
+	IsDamaged = false;
 	Health = 100.0;
+	Speed = 1.0;
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
 	SpringArmComp->SetupAttachment(CastChecked<USceneComponent, UCapsuleComponent>(GetCapsuleComponent()));
@@ -38,7 +41,6 @@ void ABasePlayerCharacter::Tick(float DeltaTime)
 // Called to bind functionality to input
 void ABasePlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	IsDamaged = false;
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	// 设置"移动"绑定。
 	PlayerInputComponent->BindAxis("MoveForward", this, &ABasePlayerCharacter::MoveForward);
@@ -49,8 +51,7 @@ void ABasePlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 	InputComponent->BindAxis("CameraYaw", this, &ABasePlayerCharacter::YawCamera);
 
 	// 设置"操作"绑定。
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ABasePlayerCharacter::StartJump);
-	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ABasePlayerCharacter::StopJump);
+	PlayerInputComponent->BindAction("Roll", IE_Pressed, this, &ABasePlayerCharacter::Roll);
 
 	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &ABasePlayerCharacter::StartAttack);
 	PlayerInputComponent->BindAction("Attack", IE_Released, this, &ABasePlayerCharacter::EndAttack);
@@ -77,11 +78,19 @@ void ABasePlayerCharacter::ControllerRotateToCameraDirection()
 
 void ABasePlayerCharacter::MoveForward(float Value)
 {
+	if(IsDamaged || Animation->IsRolling)
+	{
+		return;
+	}
 	if (Value != 0.0)
 	{
-		Value = Animation->IsBlocking ? 0.3 * Value : Value;
+		auto SpeedRate = Animation->IsBlocking ? 0.3 * Speed : Speed;
+		Value = SpeedRate * Value;
 		ControllerRotateToCameraDirection();
-		SetMeshRotation(Value > 0.0 ? 0 : -180);
+		if (!Animation->IsRolling)
+		{
+			SetMeshRotation(Value > 0.0 ? 0 : -180);
+		}
 		FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::X);
 		AddMovementInput(Direction, Value);
 	}
@@ -89,28 +98,38 @@ void ABasePlayerCharacter::MoveForward(float Value)
 
 void ABasePlayerCharacter::MoveRight(float Value)
 {
+	if(IsDamaged || Animation->IsRolling)
+	{
+		return;
+	}
 	if (Value != 0.0)
 	{
-		Value = Animation->IsBlocking ? 0.3 * Value : Value;
+		auto SpeedRate = Animation->IsBlocking ? 0.3 * Speed : Speed;
+		Value = SpeedRate * Value;
 		FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::Y);
 		ControllerRotateToCameraDirection();
-		SetMeshRotation(Value < 0.0 ? -90 : 90);
+		if (!Animation->IsRolling)
+		{
+			SetMeshRotation(Value < 0.0 ? -90 : 90);
+		}
 		AddMovementInput(Direction, Value);
 	}
 }
 
-void ABasePlayerCharacter::StartJump()
+void ABasePlayerCharacter::Roll()
 {
-	bPressedJump = true;
-}
-
-void ABasePlayerCharacter::StopJump()
-{
-	bPressedJump = false;
+	if (!Animation->IsRolling && !Animation->IsFalling && !IsDamaged )
+	{
+		Animation->PlayRollAnimation();
+	}
 }
 
 void ABasePlayerCharacter::StartAttack()
 {
+	if (Animation->IsRolling || IsDamaged)
+	{
+		return;
+	}
 	if (Animation)
 	{
 		SetMeshRotation(0.0);
@@ -129,6 +148,10 @@ void ABasePlayerCharacter::EndAttack()
 
 void ABasePlayerCharacter::StartBlock()
 {
+	if (Animation->IsRolling || IsDamaged || Animation->IsFalling)
+	{
+		return;
+	}
 	if (Animation)
 	{
 		Animation->IsBlocking = true;
@@ -172,32 +195,47 @@ float ABasePlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& D
 	if (Animation)
 	{
 		IsDamaged = true;
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "Damaged");
-		auto BackTransaltion = (GetActorLocation() - DamageCauser->GetActorLocation()).GetSafeNormal() * 10;
-		GetCapsuleComponent()->AddWorldTransform(FTransform(BackTransaltion));
-
-		auto LookAtRotation = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(),
-		                                                             DamageCauser->GetActorLocation());
-		auto ForwardVector = GetActorForwardVector().GetSafeNormal();
-		auto FaceVector =  (DamageCauser->GetActorLocation() - GetActorLocation()).GetSafeNormal();
-		auto Angle = acosf(FVector::DotProduct(ForwardVector, FaceVector));
-
-		if (abs(Angle) < PI / 2)
+		const float MeshInitalYaw = -90.0;
+		//Block attack
 		{
-			IsDamaged = false;
-			return 0.0;
+			auto ForwardVector = GetCapsuleComponent()->GetForwardVector().GetSafeNormal().RotateAngleAxis(
+				GetMesh()->GetComponentRotation().Yaw - MeshInitalYaw, FVector(0, 0, 1));
+			auto FaceVector = (DamageCauser->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+			auto Angle = acosf(FVector::DotProduct(ForwardVector, FaceVector));
+
+			auto BackTransaltion = (GetActorLocation() - DamageCauser->GetActorLocation()).GetSafeNormal() * 10;
+			GetCapsuleComponent()->AddWorldTransform(FTransform(BackTransaltion));
+			if (Animation->IsBlocking && abs(Angle) < PI / 2)
+			{
+				IsDamaged = false;
+				Animation->PlayBlockReactAnimation();
+				return 0.0;
+			}
+		}
+		//Rotate to attacker
+		{
+			auto LookAtRotationYaw = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(),
+			                                                                DamageCauser->GetActorLocation()).Yaw
+				+ MeshInitalYaw;
+			FRotator LookAtRotation(0.0, LookAtRotationYaw, 0.0);
+			GetMesh()->SetWorldRotation(LookAtRotation);
 		}
 
-		SetActorRotation(LookAtRotation);
-		DecreaseHealth(DamageAmount);
-		SetHealthBar(Health);
-		if (Health <= 0.0)
+		//Cause damage.
 		{
-			Animation->PlayDieAnimation();
+			DecreaseHealth(DamageAmount);
+			SetHealthBar(Health);
 		}
-		else
+		//Play animation
 		{
-			Animation->PlayDamagedAnimation();
+			if (Health <= 0.0)
+			{
+				Animation->PlayDieAnimation();
+			}
+			else
+			{
+				Animation->PlayDamagedAnimation();
+			}
 		}
 	}
 	return DamageAmount;

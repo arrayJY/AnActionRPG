@@ -1,16 +1,16 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "BasePlayerCharacter.h"
 #include "UPlayerAnimInstance.h"
+#include "BasePlayerCharacter.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 UPlayerAnimInstance::UPlayerAnimInstance()
 {
 	IsAttacking = false;
-	IsBlocking = true;
-	IsFalling = false;
+	IsBlocking = false;
+	IsRolling = false;
 	IsRunning = false;
 	UpperBodyBlendAlpha = 1.0;
 }
@@ -22,7 +22,7 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		auto Movement = Character->GetCharacterMovement();
 		IsRunning = Movement->GetLastUpdateVelocity().Size() > 0.0;
-		IsFalling = Movement->MovementMode == MOVE_Falling;
+		IsFalling = Movement->MovementMode == EMovementMode::MOVE_Falling;
 	}
 }
 
@@ -49,12 +49,42 @@ void UPlayerAnimInstance::PlayDamagedAnimation()
 {
 	if (DamagedMontage)
 	{
-		Montage_Stop(0.25, AttackMontage);
+		Montage_Stop(0.25);
 		Montage_Play(DamagedMontage);
 		FOnMontageEnded DamagedEndedDelegate;
 		DamagedEndedDelegate.BindUObject(this, &UPlayerAnimInstance::OnDamagedEnd);
 		Montage_SetEndDelegate(DamagedEndedDelegate, DamagedMontage);
+		
 	}
+}
+
+void UPlayerAnimInstance::PlayRollAnimation()
+{
+	if (RollMontage)
+	{
+		IsRolling = true;
+		Montage_Stop(0.1, AttackMontage);
+		Montage_Stop(0.1, BlockReactMontage);
+		Montage_Play(RollMontage, 1.5);
+		FOnMontageEnded RollEndedDelegate;
+		FOnMontageBlendingOutStarted BlendOutDelegate;
+		RollEndedDelegate.BindUObject(this, &UPlayerAnimInstance::OnRollEnd);
+		BlendOutDelegate.BindUObject(this, &UPlayerAnimInstance::OnRollBlendOut);
+		Montage_SetEndDelegate(RollEndedDelegate);
+		Montage_SetBlendingOutDelegate(BlendOutDelegate);
+	}
+}
+
+void UPlayerAnimInstance::OnRollEnd(UAnimMontage* animMontage, bool bInterrupted)
+{
+	IsRolling = false;
+	Cast<ABasePlayerCharacter>(TryGetPawnOwner())->Speed = 1.0;
+}
+
+void UPlayerAnimInstance::OnRollBlendOut(UAnimMontage* animMontage, bool bInterrupted)
+{
+	IsRolling = false;
+	Cast<ABasePlayerCharacter>(TryGetPawnOwner())->Speed = 1.0;
 }
 
 void UPlayerAnimInstance::PlayDieAnimation()
@@ -62,7 +92,16 @@ void UPlayerAnimInstance::PlayDieAnimation()
 	if (DieMontage)
 	{
 		Montage_Stop(0.25);
-		Montage_Play(DieMontage);
+		Montage_Play(DieMontage, 1.0);
+	}
+}
+
+void UPlayerAnimInstance::PlayBlockReactAnimation()
+{
+	if (BlockReactMontage)
+	{
+		Montage_Stop(0.1, BlockReactMontage);
+		Montage_Play(BlockReactMontage, 2.0, EMontagePlayReturnType::MontageLength, 0.25);
 	}
 }
 
