@@ -27,7 +27,7 @@ void UAnimNotifyState_RollMove::NotifyTick(USkeletalMeshComponent* MeshComp, UAn
 	UAnimNotifyState::NotifyTick(MeshComp, Animation, FrameDeltaTime);
 	if (Character)
 	{
-		Character->AddActorWorldTransform(FTransform(Direction * Character->Speed * 5));
+		Character->AddMovementInput(Direction, Character->Speed * 8);
 	}
 }
 

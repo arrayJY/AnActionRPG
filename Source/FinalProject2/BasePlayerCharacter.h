@@ -35,17 +35,24 @@ public:
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
 	                         AActor* DamageCauser) override;
 
-	UFUNCTION()
+	UFUNCTION(BlueprintNativeEvent)
 	void MoveForward(float Value);
+	UFUNCTION(BlueprintCallable)
+	void MoveForwardCommon(float Value);
 
-	UFUNCTION()
+	UFUNCTION(BlueprintNativeEvent)
 	void MoveRight(float Value);
+	UFUNCTION(BlueprintCallable)
+	void MoveRightCommon(float Value);
 
 	UFUNCTION()
 	void Roll();
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	void StartAttack();
+	UFUNCTION(BlueprintCallable)
+	void StartAttackCommon();
+
 
 	UFUNCTION()
 	void EndAttack();
@@ -58,10 +65,10 @@ public:
 
 	UFUNCTION()
 	void YawCamera(float Val);
-	
+
 	UFUNCTION()
 	void PitchCamera(float Val);
-	
+
 	UFUNCTION()
 	void SetMeshRotation(float Val);
 	UFUNCTION()
@@ -73,10 +80,10 @@ public:
 	void DecreaseHealth(float Val);
 	UFUNCTION(BlueprintImplementableEvent, Category="Player")
 	void SetHealthBar(float Val);
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Player")
 	bool IsDamaged;
-	
+
 	UPROPERTY(EditAnywhere)
 	class UCameraComponent* CameraComp;
 	UPROPERTY(EditAnywhere)
@@ -87,7 +94,7 @@ public:
 
 	UPROPERTY(VisibleAnywhere)
 	ABasePlayerCharacter* Character;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Speed;
 };

@@ -49,12 +49,13 @@ void UPlayerAnimInstance::PlayDamagedAnimation()
 {
 	if (DamagedMontage)
 	{
-		Montage_Stop(0.25);
+		// Montage_Stop(0.25);
 		Montage_Play(DamagedMontage);
 		FOnMontageEnded DamagedEndedDelegate;
 		DamagedEndedDelegate.BindUObject(this, &UPlayerAnimInstance::OnDamagedEnd);
 		Montage_SetEndDelegate(DamagedEndedDelegate, DamagedMontage);
-		
+	} else{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("No Montage"));    
 	}
 }
 

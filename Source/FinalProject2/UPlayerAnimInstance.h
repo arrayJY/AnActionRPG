@@ -44,7 +44,7 @@ public:
 
 	UFUNCTION()
 	void OnDamagedEnd(UAnimMontage* animMontage, bool bInterrupted);
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=PlayerState)
 	bool IsRunning;
 	
@@ -66,6 +66,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=PlayerState)
 	float UpperBodyBlendAlpha;
 
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=PlayerAnimationSequence)
+	UAnimSequence* IdleAnimSequence;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=PlayerAnimationSequence)
+	UAnimSequence* RunningAnimSequence;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=PlayerAnimationSequence)
+	UAnimSequence* BlockingAnimSequence;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=PlayerAnimationSequence)
+	UAnimSequence* FallingAnimSequence;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=PlayerAnimationSequence)
+	UAnimSequence* CrouchAnimSequence;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=UpperBodyAnimation)
 	UAnimMontage* AttackMontage;
 

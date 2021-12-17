@@ -8,8 +8,9 @@
 AFinalProject2GameMode::AFinalProject2GameMode()
 {
 	// set default pawn class to our Blueprinted character
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Player/Blueprints/PlayerCharacter"));
-	static ConstructorHelpers::FClassFinder<APawn> EnemyBP(TEXT("/Game/Player/Blueprints/MeleeEnemy"));
+	// static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Player/Blueprints/PlayerCharacter"));
+	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Enemy/Archer/Blueprints/ArcherEnemyCharacter"));
+	static ConstructorHelpers::FClassFinder<APawn> EnemyBP(TEXT("/Game/Enemy/Melee/Blueprints/MeleeEnemyCharacter"));
 	EnemyBPClass = PlayerPawnBPClass.Class;
 	Spawner = CreateDefaultSubobject<AEnemySpawner>("Spawner");
 	if (PlayerPawnBPClass.Class != NULL)

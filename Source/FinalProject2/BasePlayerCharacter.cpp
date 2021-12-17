@@ -76,9 +76,14 @@ void ABasePlayerCharacter::ControllerRotateToCameraDirection()
 	Controller->SetControlRotation(ControllerRotation);
 }
 
-void ABasePlayerCharacter::MoveForward(float Value)
+void ABasePlayerCharacter::MoveForward_Implementation(float Value)
 {
-	if(IsDamaged || Animation->IsRolling)
+	MoveForwardCommon(Value);
+}
+
+void ABasePlayerCharacter::MoveForwardCommon(float Value)
+{
+	if (IsDamaged || Animation->IsRolling)
 	{
 		return;
 	}
@@ -96,9 +101,15 @@ void ABasePlayerCharacter::MoveForward(float Value)
 	}
 }
 
-void ABasePlayerCharacter::MoveRight(float Value)
+void ABasePlayerCharacter::MoveRight_Implementation(float Value)
 {
-	if(IsDamaged || Animation->IsRolling)
+	MoveRightCommon(Value);
+}
+
+
+void ABasePlayerCharacter::MoveRightCommon(float Value)
+{
+	if (IsDamaged || Animation->IsRolling)
 	{
 		return;
 	}
@@ -118,13 +129,18 @@ void ABasePlayerCharacter::MoveRight(float Value)
 
 void ABasePlayerCharacter::Roll()
 {
-	if (!Animation->IsRolling && !Animation->IsFalling && !IsDamaged )
+	if (!Animation->IsRolling && !Animation->IsFalling && !IsDamaged)
 	{
 		Animation->PlayRollAnimation();
 	}
 }
 
-void ABasePlayerCharacter::StartAttack()
+void ABasePlayerCharacter::StartAttack_Implementation()
+{
+	StartAttackCommon();
+}
+
+void ABasePlayerCharacter::StartAttackCommon()
 {
 	if (Animation->IsRolling || IsDamaged)
 	{
@@ -203,8 +219,8 @@ float ABasePlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& D
 			auto FaceVector = (DamageCauser->GetActorLocation() - GetActorLocation()).GetSafeNormal();
 			auto Angle = acosf(FVector::DotProduct(ForwardVector, FaceVector));
 
-			auto BackTransaltion = (GetActorLocation() - DamageCauser->GetActorLocation()).GetSafeNormal() * 10;
-			GetCapsuleComponent()->AddWorldTransform(FTransform(BackTransaltion));
+			auto BackTransaltion = (GetActorLocation() - DamageCauser->GetActorLocation()).GetSafeNormal();
+			AddMovementInput(BackTransaltion, 20);
 			if (Animation->IsBlocking && abs(Angle) < PI / 2)
 			{
 				IsDamaged = false;
@@ -245,3 +261,4 @@ void ABasePlayerCharacter::DecreaseHealth(float Val)
 {
 	Health -= Val;
 }
+

@@ -11,8 +11,14 @@ UWithWeaponSceneComponent::UWithWeaponSceneComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-	Weapon = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Weapon"));
-	HitBox = CreateDefaultSubobject<UBoxComponent>(TEXT("HitBox"));
+	if(!Weapon)
+	{
+		Weapon = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Weapon"));
+	}
+	if(!HitBox)
+	{
+		HitBox = CreateDefaultSubobject<UBoxComponent>(TEXT("HitBox"));
+	}
 	Weapon->SetupAttachment(this);
 	HitBox->SetupAttachment(this);
 	HitBox->OnComponentBeginOverlap.AddDynamic(this, &UWithWeaponSceneComponent::OnOverlapBegin);
