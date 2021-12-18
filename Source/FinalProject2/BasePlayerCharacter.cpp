@@ -12,6 +12,9 @@ ABasePlayerCharacter::ABasePlayerCharacter()
 	IsDamaged = false;
 	Health = 100.0;
 	Speed = 1.0;
+	ATKValue = 10.0;
+	DEFRate = 1.0;
+	Score = 0;
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
 	SpringArmComp->SetupAttachment(CastChecked<USceneComponent, UCapsuleComponent>(GetCapsuleComponent()));
@@ -200,6 +203,7 @@ void ABasePlayerCharacter::PitchCamera(float Val)
 float ABasePlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
                                        AController* EventInstigator, AActor* DamageCauser)
 {
+	DamageAmount *= DEFRate;
 	if (IsDamaged)
 	{
 		return 0.0;
@@ -236,8 +240,7 @@ float ABasePlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& D
 			FRotator LookAtRotation(0.0, LookAtRotationYaw, 0.0);
 			GetMesh()->SetWorldRotation(LookAtRotation);
 		}
-
-		//Cause damage.
+		//Decrease Health.
 		{
 			DecreaseHealth(DamageAmount);
 			SetHealthBar(Health);
@@ -260,5 +263,14 @@ float ABasePlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& D
 void ABasePlayerCharacter::DecreaseHealth(float Val)
 {
 	Health -= Val;
+}
+
+void ABasePlayerCharacter::IncreaseScore(float ATK, float DEF)
+{
+	int BaseScore = 100;
+	BaseScore *=  ATK / 10.0;
+	BaseScore /= DEF;
+	Score += BaseScore;
+	SetScoreText(Score);
 }
 

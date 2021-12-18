@@ -17,12 +17,24 @@ public:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere)
-	UClass* EnemyBPClass;
-	
+	UClass* MeleeEnemyBPClass;
+
+	UPROPERTY(EditAnywhere)
+	UClass* ArcherEnemyBPClass;
+
 	UPROPERTY(EditAnywhere)
 	AEnemySpawner* Spawner;
-	
+
+	UFUNCTION()
+	ABasePlayerCharacter* RandomSpawnAnEnemy(float ATK = 10.0, float DEF = 1.0);
+
+	FRandomStream RandomStream;
+
+
+	UFUNCTION()
+	void OnEnemyDied(AActor* Actor);
+	UFUNCTION()
+	void OnPlayerDied(AActor* Actor);
+
+	AController* PlayerController;
 };
-
-
-

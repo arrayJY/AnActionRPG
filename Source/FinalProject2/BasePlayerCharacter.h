@@ -53,7 +53,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void StartAttackCommon();
 
-
 	UFUNCTION()
 	void EndAttack();
 
@@ -80,6 +79,8 @@ public:
 	void DecreaseHealth(float Val);
 	UFUNCTION(BlueprintImplementableEvent, Category="Player")
 	void SetHealthBar(float Val);
+	UFUNCTION(BlueprintImplementableEvent, Category="Player")
+	void SetScoreText(int Val);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Player")
 	bool IsDamaged;
@@ -97,4 +98,16 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Speed;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float ATKValue;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float DEFRate;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int Score;
+	
+	UFUNCTION()
+	void IncreaseScore(float ATK, float DEF);
 };

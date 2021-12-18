@@ -25,11 +25,19 @@ void AEnemySpawner::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AEnemySpawner::SpawnEnemy(UClass* PawnClass, FVector const& Location)
+ABasePlayerCharacter* AEnemySpawner::SpawnEnemy(UClass* PawnClass, FVector const& Location, float ATKValue,
+                                                float DEFRate)
 {
 	if (PawnClass)
 	{
-		auto Pawn =  GetWorld()->SpawnActor<ABasePlayerCharacter>(PawnClass, Location, FRotator(0.f));
-		Pawn->SpawnDefaultController();
+		auto Pawn = GetWorld()->SpawnActor<ABasePlayerCharacter>(PawnClass, Location, FRotator(0.f));
+		if (Pawn)
+		{
+			Pawn->SpawnDefaultController();
+			Pawn->ATKValue = ATKValue;
+			Pawn->DEFRate = DEFRate;
+		}
+		return Pawn;
 	}
+	return nullptr;
 }

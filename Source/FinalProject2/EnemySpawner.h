@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "BasePlayerCharacter.h"
 #include "GameFramework/Actor.h"
 #include "EnemySpawner.generated.h"
 
@@ -22,5 +23,5 @@ protected:
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	void SpawnEnemy(UClass* PawnClass, FVector const& Location);
+	ABasePlayerCharacter* SpawnEnemy(UClass* PawnClass, FVector const& Location, float ATKValue = 10.0, float DEFRate = 1.0);
 };

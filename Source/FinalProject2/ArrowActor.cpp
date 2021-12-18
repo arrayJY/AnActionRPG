@@ -3,6 +3,7 @@
 
 #include "ArrowActor.h"
 
+#include "BasePlayerCharacter.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -62,7 +63,8 @@ void AArrowActor::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, U
 	if (OtherActor != this && OtherActor->GetInstigator() != GetInstigator())
 	{
 		// OtherComponent->AddImpulseAtLocation(ProjectileMovementComponent->Velocity * 100.0f, Hit.ImpactPoint);
-		UGameplayStatics::ApplyDamage(OtherActor, 10, nullptr, GetOwner(), nullptr);
+		auto Character = Cast<ABasePlayerCharacter>(GetOwner());
+		UGameplayStatics::ApplyDamage(OtherActor, Character->ATKValue, nullptr, GetOwner(), nullptr);
 		ProjectileMovementComponent->StopMovementImmediately();
 		AttachToActor(OtherActor, FAttachmentTransformRules::KeepWorldTransform);
 	}
