@@ -9,6 +9,7 @@
 // Sets default values
 AArrowActor::AArrowActor()
 {
+	HitTime = 0;
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	if (!RootComponent)
@@ -60,9 +61,9 @@ void AArrowActor::FireInDirection(const FVector& ShootDirection)
 void AArrowActor::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent,
                         FVector NormalImpulse, const FHitResult& Hit)
 {
-	if (OtherActor != this && OtherActor->GetInstigator() != GetInstigator())
+	HitTime++;
+	if (OtherActor != this && OtherActor->GetInstigator() != GetInstigator() && HitTime == 1)
 	{
-		// OtherComponent->AddImpulseAtLocation(ProjectileMovementComponent->Velocity * 100.0f, Hit.ImpactPoint);
 		auto Character = Cast<ABasePlayerCharacter>(GetOwner());
 		UGameplayStatics::ApplyDamage(OtherActor, Character->ATKValue, nullptr, GetOwner(), nullptr);
 		ProjectileMovementComponent->StopMovementImmediately();

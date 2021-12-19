@@ -94,6 +94,13 @@ void UPlayerAnimInstance::PlayDieAnimation()
 	{
 		Montage_Stop(0.25);
 		Montage_Play(DieMontage, 1.0);
+		FOnMontageBlendingOutStarted BlendOutDelegate;
+		BlendOutDelegate.BindLambda([&](UAnimMontage* animMontage, bool bInterrupted)
+		{
+			Montage_SetPlayRate(DieMontage, 0.0);
+			TryGetPawnOwner()->Destroy();
+		});
+		Montage_SetBlendingOutDelegate(BlendOutDelegate);
 	}
 }
 

@@ -33,8 +33,8 @@ public:
 
 	UFUNCTION()
 	void OnEnemyDied(AActor* Actor);
-	UFUNCTION()
-	void OnPlayerDied(AActor* Actor);
+	UFUNCTION(BlueprintCallable)
+	void Restart();
 
 	AController* PlayerController;
 };

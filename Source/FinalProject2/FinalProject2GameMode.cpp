@@ -34,7 +34,6 @@ void AFinalProject2GameMode::BeginPlay()
 
 	auto Player = Cast<ABasePlayerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	PlayerController = Player->GetController();
-	Player->OnDestroyed.AddDynamic(this, &AFinalProject2GameMode::OnPlayerDied);
 }
 
 
@@ -68,27 +67,12 @@ void AFinalProject2GameMode::OnEnemyDied(AActor* Actor)
 		do
 		{
 			NewEnemy = RandomSpawnAnEnemy(ATK * 1.1, DEF * 0.95);
-		} while(!NewEnemy);
+		}
+		while (!NewEnemy);
 	}
 }
 
-void AFinalProject2GameMode::OnPlayerDied(AActor* Actor)
+void AFinalProject2GameMode::Restart()
 {
-	auto A = Cast<ABasePlayerCharacter>(Actor);
-	if (A)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow,
-		                                 FString::Printf(TEXT("%f %f"), A->ATKValue, A->DEFRate));
-	}
-
-	FTimerDelegate TimerDelegate;
-	TimerDelegate.BindLambda([&]
-	{
-		UE_LOG(LogTemp, Warning, TEXT("This text will appear in the console 2 seconds after execution"))
-		RestartPlayer(PlayerController);
-		auto Player = Cast<ABasePlayerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-		Player->OnDestroyed.AddDynamic(this, &AFinalProject2GameMode::OnPlayerDied);
-	});
-	FTimerHandle TimerHandle;
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, 2, false);
+	RestartPlayer(PlayerController);
 }
