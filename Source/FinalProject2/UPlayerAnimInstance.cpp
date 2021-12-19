@@ -41,7 +41,19 @@ void UPlayerAnimInstance::PlayAttackAnimation()
 void UPlayerAnimInstance::OnDamagedEnd(UAnimMontage* animMontage, bool bInterrupted)
 {
 	auto Character = Cast<ABasePlayerCharacter>(TryGetPawnOwner());
-	Character->IsDamaged = false;
+	if(Character)
+	{
+		Character->IsDamaged = false;
+		Character->GetCharacterMovement()->Activate();
+	}
+}
+
+void UPlayerAnimInstance::OnBlockReactEnd(UAnimMontage* animMontage, bool bInterrupted){
+	auto Character = Cast<ABasePlayerCharacter>(TryGetPawnOwner());
+	if(Character)
+	{
+		Character->GetCharacterMovement()->Activate();
+	}
 }
 
 
@@ -49,14 +61,11 @@ void UPlayerAnimInstance::PlayDamagedAnimation()
 {
 	if (DamagedMontage)
 	{
-		// Montage_Stop(0.25);
 		Montage_Play(DamagedMontage);
-		FOnMontageEnded DamagedEndedDelegate;
-		DamagedEndedDelegate.BindUObject(this, &UPlayerAnimInstance::OnDamagedEnd);
-		Montage_SetEndDelegate(DamagedEndedDelegate, DamagedMontage);
-	} else{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("No Montage"));    
-	}
+		FOnMontageBlendingOutStarted DamagedBlendoutDelegate;
+		DamagedBlendoutDelegate.BindUObject(this, &UPlayerAnimInstance::OnDamagedEnd);
+		Montage_SetEndDelegate(DamagedBlendoutDelegate, DamagedMontage);
+	} 
 }
 
 void UPlayerAnimInstance::PlayRollAnimation()
@@ -110,6 +119,9 @@ void UPlayerAnimInstance::PlayBlockReactAnimation()
 	{
 		Montage_Stop(0.1, BlockReactMontage);
 		Montage_Play(BlockReactMontage, 2.0, EMontagePlayReturnType::MontageLength, 0.25);
+		FOnMontageBlendingOutStarted BlendoutDelegate;
+		BlendoutDelegate.BindUObject(this, &UPlayerAnimInstance::OnBlockReactEnd);
+		Montage_SetBlendingOutDelegate(BlendoutDelegate, BlockReactMontage);
 	}
 }
 

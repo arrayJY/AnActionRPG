@@ -4,6 +4,7 @@
 #include "BasePlayerCharacter.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 // Sets default values
@@ -203,8 +204,9 @@ void ABasePlayerCharacter::PitchCamera(float Val)
 float ABasePlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
                                        AController* EventInstigator, AActor* DamageCauser)
 {
+	auto Movement = GetCharacterMovement();
 	DamageAmount *= DEFRate;
-	if (IsDamaged)
+	if (IsDamaged || Health <= 0.0)
 	{
 		return 0.0;
 	}
@@ -216,6 +218,8 @@ float ABasePlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& D
 	{
 		IsDamaged = true;
 		const float MeshInitalYaw = -90.0;
+		Movement->StopActiveMovement();
+		Movement->Deactivate();
 		//Block attack
 		{
 			auto ForwardVector = GetCapsuleComponent()->GetForwardVector().GetSafeNormal().RotateAngleAxis(
@@ -268,9 +272,8 @@ void ABasePlayerCharacter::DecreaseHealth(float Val)
 void ABasePlayerCharacter::IncreaseScore(float ATK, float DEF)
 {
 	int BaseScore = 100;
-	BaseScore *=  ATK / 10.0;
+	BaseScore *= ATK / 10.0;
 	BaseScore /= DEF;
 	Score += BaseScore;
 	SetScoreText(Score);
 }
-

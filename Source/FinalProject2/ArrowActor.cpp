@@ -18,6 +18,7 @@ AArrowActor::AArrowActor()
 		CollisionComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComponent"));
 		// 设置球体的碰撞半径。
 		CollisionComponent->BodyInstance.SetCollisionProfileName(TEXT("Arrow"));
+		CollisionComponent->OnComponentHit.AddDynamic(this, &AArrowActor::OnHit);
 		CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &AArrowActor::OnOverlapBegin);
 		CollisionComponent->InitBoxExtent(FVector(25, 1, 1));
 		// 将根组件设置为碰撞组件。
@@ -58,6 +59,16 @@ void AArrowActor::FireInDirection(const FVector& ShootDirection)
 	ProjectileMovementComponent->Velocity = ShootDirection * ProjectileMovementComponent->InitialSpeed;
 }
 
+void AArrowActor::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent,
+                        FVector NormalImpulse, const FHitResult& Hit)
+{
+	if (OtherActor != this && OtherActor->GetInstigator() != GetInstigator())
+	{
+		CollisionComponent->SetSimulatePhysics(false);
+		ProjectileMovementComponent->StopMovementImmediately();
+		AttachToActor(OtherActor, FAttachmentTransformRules::KeepWorldTransform);
+	}
+}
 
 void AArrowActor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)

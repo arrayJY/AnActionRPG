@@ -44,6 +44,9 @@ public:
 
 	UFUNCTION()
 	void OnDamagedEnd(UAnimMontage* animMontage, bool bInterrupted);
+	UFUNCTION()
+	void OnBlockReactEnd(UAnimMontage* animMontage, bool bInterrupted);
+	
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=PlayerState)
 	bool IsRunning;
